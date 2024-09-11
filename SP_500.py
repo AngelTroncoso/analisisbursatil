@@ -1,9 +1,10 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import ta
+
+# ... (resto del código)
 
 # Botón para elegir color de fondo de la página
 st.subheader('Visualización de Acciones del S&P 500')
