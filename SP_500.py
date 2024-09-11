@@ -4,8 +4,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import ta
 
-# ... (resto del código)
-
 # Botón para elegir color de fondo de la página
 st.subheader('Visualización de Acciones del S&P 500')
 color_pagina = st.color_picker('Selecciona un color para la página')
@@ -41,86 +39,86 @@ end_date = st.date_input('Fecha de fin', value=pd.to_datetime('today'))
 
 # Botón para cargar datos y visualizar
 if st.button('Mostrar gráfico'):
-    # Descargar datos de Yahoo Finance
-    data = yf.download([selected_symbol, selected_symbol2, selected_symbol3], start=start_date, end=end_date)
+    try:
+        if selected_symbol and selected_symbol2 and selected_symbol3 and start_date and end_date:
+            # Descargar datos de Yahoo Finance
+            data = yf.download([selected_symbol, selected_symbol2, selected_symbol3], start=start_date, end=end_date)
 
-    if not data.empty:
-        # Mostrar gráfico del precio de cierre
-        st.subheader(f'Datos históricos de {selected_symbol}, {selected_symbol2} y {selected_symbol3}')
-        st.line_chart(data['Close'])
+            if not data.empty:
+                # Mostrar gráfico del precio de cierre
+                st.subheader(f'Datos históricos de {selected_symbol}, {selected_symbol2} y {selected_symbol3}')
+                st.line_chart(data['Close'])
 
-        # Mostrar gráfico de candelas
-        st.subheader('Gráfico de candelas')
-        fig = go.Figure(data=[go.Candlestick(x=data.index,
-                                            open=data['Open'][selected_symbol],
-                                            high=data['High'][selected_symbol],
-                                            low=data['Low'][selected_symbol],
-                                            close=data['Close'][selected_symbol],
-                                            name=selected_symbol),
-                                    go.Candlestick(x=data.index,
-                                                    open=data['Open'][selected_symbol2],
-                                                    high=data['High'][selected_symbol2],
-                                                    low=data['Low'][selected_symbol2],
-                                                    close=data['Close'][selected_symbol2],
-                                                    name=selected_symbol2),
-                                    go.Candlestick(x=data.index,
-                                                    open=data['Open'][selected_symbol3],
-                                                    high=data['High'][selected_symbol3],
-                                                    low=data['Low'][selected_symbol3],
-                                                    close=data['Close'][selected_symbol3],
-                                                    name=selected_symbol3)])
-        fig.update_layout(title='Gráfico de candelas', xaxis_title='Fecha', yaxis_title='Precio')
-        st.plotly_chart(fig)
+                # Mostrar gráfico de candelas
+                st.subheader('Gráfico de candelas')
+                fig = go.Figure(data=[go.Candlestick(x=data.index,
+                                                    open=data['Open'][selected_symbol],
+                                                    high=data['High'][selected_symbol],
+                                                    low=data['Low'][selected_symbol],
+                                                    close=data['Close'][selected_symbol],
+                                                    name=selected_symbol),
+                                        go.Candlestick(x=data.index,
+                                                        open=data['Open'][selected_symbol2],
+                                                        high=data['High'][selected_symbol2],
+                                                        low=data['Low'][selected_symbol2],
+                                                        close=data['Close'][selected_symbol2],
+                                                        name=selected_symbol2),
+                                        go.Candlestick(x=data.index,
+                                                        open=data['Open'][selected_symbol3],
+                                                        high=data['High'][selected_symbol3],
+                                                        low=data['Low'][selected_symbol3],
+                                                        close=data['Close'][selected_symbol3],
+                                                        name=selected_symbol3)])
+                fig.update_layout(title='Gráfico de candelas', xaxis_title='Fecha', yaxis_title='Precio')
+                st.plotly_chart(fig)
 
-        # Mostrar recomendaciones de análisis bursátiles financieros
-        st.subheader('Recomendaciones de análisis bursátiles financieros')
+                # Mostrar recomendaciones de análisis bursátiles financieros
+                st.subheader('Recomendaciones de análisis bursátiles financieros')
 
-        # Calcula la media móvil de 50 días
-        data['MA50'] = data['Close'][selected_symbol].rolling(window=50).mean()
+                # Calcula la media móvil de 50 días
+                data['MA50'] = data['Close'][selected_symbol].rolling(window=50).mean()
 
-        # Calcula la media móvil de 200 días
-        data['MA200'] = data['Close'][selected_symbol].rolling(window=200).mean()
+                # Calcula la media móvil de 200 días
+                data['MA200'] = data['Close'][selected_symbol].rolling(window=200).mean()
 
-        # Compara las medias móviles para determinar la tendencia
-        if data['MA50'].iloc[-1] > data['MA200'].iloc[-1]:
-            st.write('La tendencia es alcista')
-        elif data['MA50'].iloc[-1] < data['MA200'].iloc[-1]:
-            st.write('La tendencia es bajista')
+                # Compara las medias móviles para determinar la tendencia
+                if data['MA50'].iloc[-1] > data['MA200'].iloc[-1]:
+                    st.write('La tendencia es alcista')
+                elif data['MA50'].iloc[-1] < data['MA200'].iloc[-1]:
+                    st.write('La tendencia es bajista')
+                else:
+                    st.write('La tendencia es neutra')
+
+                # Calcula el RSI (Relative Strength Index)
+                data['RSI'] = ta.momentum.RSIIndicator(data['Close'][selected_symbol], window=14).rsi()
+
+                                # Compara el RSI para determinar si la acción está sobrecomprada o sobre vendida
+                if data['RSI'].iloc[-1] > 70:
+                    st.write('La acción está sobrecomprada')
+                elif data['RSI'].iloc[-1] < 30:
+                    st.write('La acción está sobre vendida')
+                else:
+                    st.write('La acción está en un nivel neutral')
+
+                # Opción para descargar datos
+                st.subheader('Descargar datos')
+                @st.cache_data
+                def convert_df(df):
+                    return df.to_csv().encode('utf-8')
+                if st.button('Descargar datos como CSV'):
+                    try:
+                        csv = convert_df(data)
+                        st.download_button(
+                            label="Descargar datos como CSV",
+                            data=csv,
+                            file_name='datos.csv',
+                            mime='text/csv',
+                        )
+                    except Exception as e:
+                        st.error(f'Error al descargar datos: {e}')
+            else:
+                st.error('No se encontraron datos para este rango de fechas.')
         else:
-            st.write('La tendencia es neutra')
-
-        # Calcula el RSI (Relative Strength Index)
-        data['RSI'] = ta.momentum.RSIIndicator(data['Close'][selected_symbol], window=14).rsi()
-
-        # Compara el RSI para determinar si la acción está sobrecomprada o sobre vendida
-        if data['RSI'].iloc[-1] > 70:
-             st.write('La acción está sobrecomprada')
-        elif data['RSI'].iloc[-1] < 30:
-            st.write('La acción está sobre vendida')
-        else:
-            st.write('La acción está en un nivel neutral')
-
-        # Opción para descargar datos
-        st.subheader('Descargar datos')
-        @st.cache
-        def convert_df(df):
-            return df.to_csv().encode('utf-8')
-        csv = convert_df(data)
-        st.download_button(
-            label="Descargar datos como CSV",
-            data=csv,
-            file_name='datos.csv',
-            mime='text/csv',
-        )
-    else:
-        st.error('No se encontraron datos para este rango de fechas.')
-
-        from setuptools import setup
-
-setup(
-    name='tu_aplicacion',
-    version='1.0',
-    install_requires=[
-        'yfinance'
-    ]
-)
+            st.error('Por favor, selecciona acciones y fechas válidas.')
+    except Exception as e:
+        st.error(f'Error al descargar datos o generar gráfico: {e}')
